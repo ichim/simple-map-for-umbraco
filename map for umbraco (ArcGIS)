@@ -1,1 +1,105 @@
+@inherits Umbraco.Web.Macros.PartialViewMacroPage
+@using System.Diagnostics
+@using System
 
+@{
+    
+   var latitude =   Model.MacroParameters["latitude"];
+   var longitude =  Model.MacroParameters["longitude"];
+   var basemap =    Model.MacroParameters["basemap"];
+   var zoom_level = Model.MacroParameters["zoomLevel"];
+   Random random = new Random(); 
+   var div_id = "mapDiv" + Model.MacroParameters["id"];
+   var feature_server = Model.MacroParameters["featureServer"];
+
+}
+<section >
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>Map/Layers for Umbraco © Esri Romania</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/3.31/esri/css/esri.css">
+ 
+    <style>
+        #info {
+            top: 20px;
+            color: #444;
+            height: auto;
+            font-family: arial;
+            right: 20px;
+            margin: 5px;
+            padding: 10px;
+            position: absolute;
+            width: 115px;
+            z-index: 40;
+            border: solid 2px #666;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+
+        html, body, #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+        }
+
+        button {
+            display: block;
+        }
+    </style>
+
+    <script src="https://js.arcgis.com/3.31/"></script>
+    <script>
+      var map, tb;
+
+      require([
+        "esri/map", "esri/dijit/Scalebar","esri/layers/FeatureLayer","dojo/dom", "dojo/on", "dojo/domReady!"
+      ], function(
+        Map,Scalebar,FeatureLayer, dom, on
+      ) {
+
+            
+
+            var _feature_servers = @Html.Raw(Json.Encode(feature_server));
+            
+            var _div_id  =   @Html.Raw(Json.Encode(div_id));
+            
+            
+            console.log(_div_id);
+            map = new Map(_div_id, {
+              basemap: @Html.Raw(Json.Encode(basemap)),
+              center: [parseFloat( @Html.Raw(Json.Encode(latitude))), parseFloat(  @Html.Raw(Json.Encode(longitude)))],
+              zoom:  parseInt( @Html.Raw(Json.Encode(zoom_level)))
+            });
+            map.on("load", function () { });
+            
+            if(_feature_servers.trim().length!=0)
+            {
+              
+                for(var url of _feature_servers.split(";"))
+                {
+                    if(url.trim().length!=0)
+                    {
+                            var feature_layer = new FeatureLayer(url, {outFields:["*"],opacity:0.7});
+                            map.addLayers([feature_layer]);
+                    }
+                    
+                }
+                
+            
+            }
+              
+             var scalebar = new Scalebar({
+                      map: map,
+                      scalebarUnit: "metric"
+                    });
+
+      });
+    </script>
+
+        <section class="map" style="height:285px;width:100%;" id=@div_id></section>
+
+</section>
